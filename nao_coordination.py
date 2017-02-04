@@ -12,7 +12,9 @@ import sys
 
 class NaoCoordination(threading.Thread):
     speed = 1.0
-    responses = ["Aber gerne", "Okay", "Alles klar", "Mache ich"]
+    responses = ["Aber gerne", "Okay", "Alles klar"]
+    filename = '/tmp/personen.txt'
+    #responses = ["Aber gerne", "Okay", "Alles klar", "Mache ich"]
     def __init__(self, bridge = 'tcp://localhost:8081', naohost = "cappy.dhcp", naoport = 9559):
         super(NaoCoordination, self).__init__()
         self.setDaemon(True)
@@ -40,7 +42,9 @@ class NaoCoordination(threading.Thread):
             'halt': self.stopMove,
             'aufstehen': self.stand,
             'hinsetzen': self.sit,
+            'personen': self.faces,
         }
+        self.faces = ["gesichter", "personen"]
         def signal_handler(signal, frame):
             print('Aborting...')
             #connection = ALProxy("ALConnectionManager", naohost, naoport)
@@ -48,6 +52,8 @@ class NaoCoordination(threading.Thread):
             sys.exit(0)
         signal.signal(signal.SIGINT, signal_handler)
 
+    def faces(self):
+        pass
 
     def run(self):
         #ALAutonomousMoves.setExpressiveListeningEnabled(False)
@@ -69,7 +75,11 @@ class NaoCoordination(threading.Thread):
                     self.sock.send("Das habe ich leider nicht verstanden")
                     continue
                 #print 'translated to call "' + str(call) + '"'
-                response = random.choice(self.responses)
+                if message in self.faces:
+                    f = open(self.filename, 'r')
+                    response = f.read()
+                else:
+                    response = random.choice(self.responses)
                 print 'responding:', response
                 self.sock.send(response)
                 call()
